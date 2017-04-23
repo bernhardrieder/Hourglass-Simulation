@@ -42,56 +42,111 @@ namespace commandLineHandles
 		}
 		return Error;
 	}
-
 }
 
 int main(int argc, char* argv[])
 {
 	switch (commandLineHandles::requestCmdLine(argc, argv))
 	{
-		case commandLineHandles::Error: system("PAUSE"); return 0;
-		case commandLineHandles::CPU_Usage: break;
-		case commandLineHandles::GPU_Usage: break;
+	case commandLineHandles::Error: getchar(); return 0;
+	case commandLineHandles::CPU_Usage: break;
+	case commandLineHandles::GPU_Usage: break;
 	}
-	
 
-	sf::Vector2u hourGlassDimensions = { 300, 1000 };
-	sf::Vector2u windowDimensions = { 1000, 1000 };
-	
+
+	sf::Vector2u hourGlassDimensions = {300, 1000};
+	sf::Vector2u windowDimensions = {1000, 1000};
+
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 0;
-	
-	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "SFML works!", sf::Style::Default, settings);
+	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Default, settings);
 
-	sf::RectangleShape rect(sf::Vector2f(300, 1000));
-	rect.setFillColor(sf::Color::Black);
-	rect.setPosition(350, 0);
+
+	/********************************************** CREATE HOURGLASS ***********************************************/
+	sf::RenderTexture hourGlassRenderTexture;
+	if (!hourGlassRenderTexture.create(hourGlassDimensions.x, hourGlassDimensions.y))
+	{
+		std::cerr << "cant create render texture";
+		//error
+	}
 
 	// create an array of 3 vertices that define a triangle primitive
-	sf::VertexArray triangle(sf::Triangles, 6);
+	sf::VertexArray hourGlassWalls(sf::Triangles, 6);
 
+	signed hourGlassFlowWidth = 8;
 	// define the position of the triangle's points
-	triangle[0].position = sf::Vector2f(windowDimensions.x/2.f-hourGlassDimensions.x/2.f, 0);
-	triangle[1].position = { windowDimensions.x / 2.f, windowDimensions.y / 2.f + 10};
-	triangle[2].position = { triangle[0].position.x+ hourGlassDimensions.x, triangle[0].position.y };
-
-	triangle[3].position = { triangle[0].position.x, triangle[0].position.y + hourGlassDimensions.y };
-	triangle[4].position = triangle[1].position;
-	triangle[4].position.y -= 20;
-	triangle[5].position = { triangle[2].position.x, triangle[2].position.y + hourGlassDimensions.y };
-
+	//left wall
+	hourGlassWalls[0].position = {0,0};
+	hourGlassWalls[1].position = {(hourGlassDimensions.x / 2.f) - hourGlassFlowWidth / 2, hourGlassDimensions.y / 2.f};
+	hourGlassWalls[2].position = {0, static_cast<float>(hourGlassDimensions.y)};
+	//right wall
+	hourGlassWalls[3].position = {static_cast<float>(hourGlassDimensions.x), 0};
+	hourGlassWalls[4].position = {(hourGlassDimensions.x / 2.f) + hourGlassFlowWidth / 2, hourGlassDimensions.y / 2.f};
+	hourGlassWalls[5].position = {static_cast<float>(hourGlassDimensions.x), static_cast<float>(hourGlassDimensions.y)};
 
 	// define the color of the triangle's points
-	triangle[0].color = sf::Color::White;
-	triangle[1].color = sf::Color::White;
-	triangle[2].color = sf::Color::White;
-	triangle[3].color = sf::Color::White;
-	triangle[4].color = sf::Color::White;
-	triangle[5].color = sf::Color::White;
+	hourGlassWalls[0].color = sf::Color::Black;
+	hourGlassWalls[1].color = sf::Color::Black;
+	hourGlassWalls[2].color = sf::Color::Black;
+	hourGlassWalls[3].color = sf::Color::Black;
+	hourGlassWalls[4].color = sf::Color::Black;
+	hourGlassWalls[5].color = sf::Color::Black;
 
+	//create sand
+	sf::Color sandColor = sf::Color(230, 197, 92, 255);
+	float emptyPercentage = 0.01f;
+	sf::VertexArray hourGlassSand(sf::Quads);
+	hourGlassSand.append(sf::Vertex(sf::Vector2f(static_cast<float>(hourGlassDimensions.x), hourGlassDimensions.y * emptyPercentage), sandColor)); // upper right
+	hourGlassSand.append(sf::Vertex(sf::Vector2f(0, hourGlassDimensions.y * emptyPercentage), sandColor)); // upper left
+	hourGlassSand.append(sf::Vertex(sf::Vector2f(0, hourGlassDimensions.y / 2.f), sandColor)); // lower left
+	hourGlassSand.append(sf::Vertex(sf::Vector2f(static_cast<float>(hourGlassDimensions.x), hourGlassDimensions.y / 2.f), sandColor)); // lower right
 
-	// no texture coordinates here, we'll see that later
+	//render hourglass into rendertexture!
+	hourGlassRenderTexture.clear(sf::Color::White);
+	hourGlassRenderTexture.draw(hourGlassSand);
+	hourGlassRenderTexture.draw(hourGlassWalls);
+	hourGlassRenderTexture.display();
 
+	// get the target texture (where the stuff has been drawn)
+	sf::Texture& texture = const_cast<sf::Texture&>(hourGlassRenderTexture.getTexture());
+	//sf::Color col = sf::Color::Green;
+	//sf::Uint8 pixel[4] = { col.r,col.g,col.b,col.a };
+	//texture.update(pixel, 1, 1, 500, 500);
+
+	//pixel manipulation
+	sf::Image img = hourGlassRenderTexture.getTexture().copyToImage();
+	//img.setPixel(149, 499, sf::Color::Red);
+	auto imgSize = img.getSize();
+	sf::Uint8* pixelptr = const_cast<sf::Uint8*>(img.getPixelsPtr());
+	for (int x = 0; x < imgSize.x; x += 2)
+	{
+		for (int y = 0; y < imgSize.y; y += 2)
+		{
+			size_t index = 4 * (y * imgSize.x + x);
+			//pixelptr[index + 0] = 255; //r
+			//pixelptr[index + 1] = 0; //g
+			//pixelptr[index + 2] = 0; //b
+			//pixelptr[index + 3] = 255; //a
+		}
+	}
+
+	//use manipulated image and create renderable hourglass sprite
+	sf::Texture modifiedTex;
+	if (!modifiedTex.loadFromImage(img))
+	{
+		getchar();
+		return 0;
+	}
+	sf::Sprite hourglassSprite(modifiedTex);
+	hourglassSprite.setOrigin(hourGlassDimensions.x / 2.f, hourGlassDimensions.y / 2.f);
+	hourglassSprite.setPosition(windowDimensions.x / 2.f, windowDimensions.y / 2.f);
+
+	//test sand placed by mouse button
+	sf::VertexArray placedSand(sf::Points);
+
+	sf::Clock clock;
+
+	/********************************************** RENDER ***********************************************/
 	while (window.isOpen())
 	{
 		sf::Event event;
@@ -113,10 +168,17 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
+		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+		{
+			using namespace sf;
+			placedSand.append(Vertex(static_cast<Vector2f>(Mouse::getPosition(window)), Color::Yellow));
+		}
+		sf::Time elapsed = clock.restart();
+		//hourglassSprite.rotate(10*elapsed.asSeconds());
 
-		window.clear();
-		window.draw(rect);
-		window.draw(triangle);
+		window.clear(sf::Color(100, 100, 100, 100));
+		window.draw(hourglassSprite);
+		window.draw(placedSand);
 		window.display();
 	}
 
