@@ -146,6 +146,12 @@ int main(int argc, char* argv[])
 
 	sf::Clock clock;
 
+	unsigned sandTeleportBrushRadius = 10;
+	sf::CircleShape sandTeleportBrush = sf::CircleShape(sandTeleportBrushRadius);
+	sf::CircleShape sandTeleportBrushMarker = sf::CircleShape(sandTeleportBrushRadius);
+	sandTeleportBrush.setFillColor(sf::Color::Yellow);
+	sandTeleportBrushMarker.setFillColor(sf::Color(255,0,0,50));
+
 	/********************************************** RENDER ***********************************************/
 	while (window.isOpen())
 	{
@@ -160,11 +166,16 @@ int main(int argc, char* argv[])
 					window.close();
 				if (event.key.code == sf::Keyboard::Add || event.key.code == sf::Keyboard::Equal) //US/UK layout -> Equal == +
 				{
-					std::cout << "increase delete brush radius" << std::endl;
+					++sandTeleportBrushRadius;
+					sandTeleportBrush.setRadius(sandTeleportBrushRadius);
+					sandTeleportBrushMarker.setRadius(sandTeleportBrushRadius);
 				}
 				else if (event.key.code == sf::Keyboard::Subtract || event.key.code == sf::Keyboard::Dash) //US/UK layout -> Dash == -
 				{
-					std::cout << "decrease delete brush radius" << std::endl;
+					if(sandTeleportBrushRadius > 0)
+						--sandTeleportBrushRadius;
+					sandTeleportBrush.setRadius(sandTeleportBrushRadius);
+					sandTeleportBrushMarker.setRadius(sandTeleportBrushRadius);
 				}
 			}
 		}
@@ -173,12 +184,16 @@ int main(int argc, char* argv[])
 			using namespace sf;
 			placedSand.append(Vertex(static_cast<Vector2f>(Mouse::getPosition(window)), Color::Yellow));
 		}
+		sandTeleportBrushMarker.setOrigin(sandTeleportBrushRadius, sandTeleportBrushRadius);
+		sandTeleportBrushMarker.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
+
 		sf::Time elapsed = clock.restart();
 		//hourglassSprite.rotate(10*elapsed.asSeconds());
 
 		window.clear(sf::Color(100, 100, 100, 100));
 		window.draw(hourglassSprite);
 		window.draw(placedSand);
+		window.draw(sandTeleportBrushMarker);
 		window.display();
 	}
 
