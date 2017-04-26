@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 		case commandLineHandles::GPU_Usage: margolusSimulator.ActivateOpenCL(); break;
 	}
 
-	Hourglass hourglass({ 300, 1000 }, 8, 0.90f, wallColor, sandColor, idleColor);
+	Hourglass hourglass({ 300, 1000 }, 8, 0.10f, wallColor, sandColor, idleColor);
 	sf::Vector2u windowDimensions = {1000, 1000};
 
 	//sf::ContextSettings settings;
@@ -86,9 +86,9 @@ int main(int argc, char* argv[])
 	sandTeleportBrushMarker.setFillColor(sf::Color(255, 0, 0, 50));
 
 	sf::Texture windowSizedTextureWithHourglass;
+	sf::RenderTexture rtWithHourglassInside;
 	{
 		//create window sized texture with hourglass in it
-		sf::RenderTexture rtWithHourglassInside;
 		if (!rtWithHourglassInside.create(windowDimensions.x, windowDimensions.y))
 		{
 			std::cerr << "Cannot create rendertexture - File " << __FILE__ << ", Line " << __LINE__;
@@ -130,11 +130,33 @@ int main(int argc, char* argv[])
 				}
 				else if (event.key.code == sf::Keyboard::Left)
 				{
+					sf::Sprite sprite(windowSizedTextureWithHourglass);		
+					sprite.setOrigin(500, 500);
+					sprite.setPosition(500, 500);
+					sprite.rotate(-45);
+
+					rtWithHourglassInside.clear(wallColor);
+					rtWithHourglassInside.draw(sprite);
+					rtWithHourglassInside.display();
+
+					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
+
+					//windowSizedTextureWithHourglass.
 					//hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)).rotate(-90);
 					//rotate hourglass by 45 degree to the left
 				}
 				else if (event.key.code == sf::Keyboard::Right)
 				{
+					sf::Sprite sprite(windowSizedTextureWithHourglass);
+					sprite.setOrigin(500, 500);
+					sprite.setPosition(500, 500);
+					sprite.rotate(45);
+
+					rtWithHourglassInside.clear(wallColor);
+					rtWithHourglassInside.draw(sprite);
+					rtWithHourglassInside.display();
+
+					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
 					//hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)).rotate(+90);
 					//rotate hourglass by 45 degree to the right
 				}
@@ -159,10 +181,11 @@ int main(int argc, char* argv[])
 		}
 
 		sf::Sprite sprite(windowSizedTextureWithHourglass);
-		//sprite.setOrigin(1000, 1000);
-		//sprite.setPosition(1000, 1000);
+		sprite.setOrigin(500, 500);
+		sprite.setPosition(500, 500);
+		//sprite.rotate(45);
 
-		window.clear(sf::Color(100, 100, 100, 100));
+		window.clear(wallColor);
 		window.draw(sprite);
 		window.draw(placedSand);
 		window.draw(sandTeleportBrushMarker);
