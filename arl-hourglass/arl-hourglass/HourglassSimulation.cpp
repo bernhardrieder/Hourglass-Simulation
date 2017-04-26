@@ -30,7 +30,7 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 		return 0;
 	case CPU_Usage: margolusSimulator.ActivateOpenMP();
 		break;
-	case GPU_Usage: margolusSimulator.ActivateOpenCL(windowDimensions);
+	case GPU_Usage: margolusSimulator.ActivateOpenCL(windowDimensions, sandColor, wallColor, idleColor);
 		break;
 	}
 
@@ -110,7 +110,7 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 		if (window.hasFocus() && (sf::Mouse::isButtonPressed(sf::Mouse::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Right)))
 		{
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
-			colorizePixelAtPosition(img, sf::Mouse::getPosition(window), sandTeleportBrush.getRadius(), sf::Mouse::isButtonPressed(sf::Mouse::Left) ? idleColor : sandColor, wallColor);
+			colorizePixelAtPosition(img, sf::Mouse::getPosition(window), sandTeleportBrush.getRadius(), sf::Mouse::isButtonPressed(sf::Mouse::Left) ? idleColor : sandColor, wallColor, windowDimensions);
 			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
 
@@ -166,14 +166,14 @@ void HourglassSimulation::showUsage(const char* name)
 		<< std::endl;
 }
 
-void HourglassSimulation::colorizePixelAtPosition(sf::Image& inOutImage, const sf::Vector2i& position, const float& radius, const sf::Color& newColor, const sf::Color& restrictedColor) const
+void HourglassSimulation::colorizePixelAtPosition(sf::Image& inOutImage, const sf::Vector2i& position, const float& radius, const sf::Color& newColor, const sf::Color& restrictedColor, const sf::Vector2u& windowDimensions) const
 {
 	for (int x = -radius; x <= radius; ++x)
 	{
 		for (int y = -radius; y <= radius; ++y)
 		{
 			sf::Vector2i newPos = position + sf::Vector2i(x, y);
-			if (newPos.x < 0 || newPos.y < 0)
+			if (newPos.x < 0 || newPos.y < 0 || newPos.x >= windowDimensions.x || newPos.y >= windowDimensions.y)
 				continue;
 
 			float distance = std::sqrt(std::pow(newPos.x - position.x, 2) + std::pow(newPos.y - position.y, 2));

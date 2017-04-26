@@ -154,7 +154,7 @@
     <ClCompile Include="HourglassSimulation.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MargolusNeighborhoodSimulator.cpp" />
-    <ClCompile Include="OpenCL.cpp" />
+    <ClCompile Include="MargolusNeighborhoodSimulatorOpenCL.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="kernel.cl" />
@@ -166,7 +166,7 @@
     <ClInclude Include="HourglassSimulation.h" />
     <ClInclude Include="LookUpTables.h" />
     <ClInclude Include="MargolusNeighborhoodSimulator.h" />
-    <ClInclude Include="OpenCL.h" />
+    <ClInclude Include="MargolusNeighborhoodSimulatorOpenCL.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

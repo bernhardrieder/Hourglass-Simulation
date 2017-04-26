@@ -3,15 +3,15 @@
 #include <CL/cl.hpp>
 #include <SFML/Graphics.hpp>
 
-class OpenCL
+class MargolusNeighborhoodSimulatorOpenCL
 {
 public:
-	OpenCL() = delete;
-	OpenCL(bool useGpu, int platformId, int deviceId);
-	~OpenCL();
+	MargolusNeighborhoodSimulatorOpenCL() = delete;
+	MargolusNeighborhoodSimulatorOpenCL(bool useGpu, int platformId, int deviceId);
+	~MargolusNeighborhoodSimulatorOpenCL();
 
-	void Initialize(const sf::Vector2u& imgSize);
-	void ApplyMargolusRules(sf::Uint8* pixelptr, const sf::Vector2u& imgSize);
+	void Initialize(const sf::Vector2u& imgSize, const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor);
+	void ApplyMargolusRules(sf::Uint8* pixelptr, const sf::Vector2u& imgSize, const unsigned& pixelOffset);
 
 private:
 	const std::string m_sourceCodeFile = "kernel.cl";
@@ -25,6 +25,12 @@ private:
 	cl::Buffer m_bufferData;
 	cl::Buffer m_bufferDimensionX;
 	cl::Buffer m_bufferDimensionY;
+	cl::Buffer m_bufferPixelOffset;
+	cl::Buffer m_bufferRulesLUT;
+	cl::Buffer m_bufferChangesAvailableLUT;
+	cl::Buffer m_bufferParticleColor;
+	cl::Buffer m_bufferObstacleColor;
+	cl::Buffer m_bufferIdleColor;
 	int m_deviceMaxWorkGroupSize;
 	cl::NDRange m_globalRange;
 	cl::NDRange m_localRange;
@@ -32,7 +38,7 @@ private:
 	sf::Vector2u m_dataSize;
 	int m_sizeOfImage;
 
-	void createKernel(const sf::Vector2u& imgSize);
+	void createKernel(const sf::Vector2u& imgSize, const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor);
 	std::vector<cl::Platform> getPlatforms() const;
 	void getDevice(bool useGpu, int platformId, int deviceId);
 	void createContext(const cl::Device& device);

@@ -25,14 +25,14 @@ void MargolusNeighborhoodSimulator::ActivateOpenMP()
 	m_concreteApplyRulesFunction = [&](sf::Uint8* pixelptr, sf::Vector2u imgSize) {applyRulesOpenMP(pixelptr, imgSize); };
 }
 
-void MargolusNeighborhoodSimulator::ActivateOpenCL(const sf::Vector2u& windowSize)
+void MargolusNeighborhoodSimulator::ActivateOpenCL(const sf::Vector2u& windowSize, const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor)
 {
 	int platformId = 0;
 	int deviceId = 0;
 	bool useGPU = true;
 
-	m_ocl = new OpenCL(useGPU, platformId, deviceId);
-	m_ocl->Initialize(windowSize);
+	m_ocl = new MargolusNeighborhoodSimulatorOpenCL(useGPU, platformId, deviceId);
+	m_ocl->Initialize(windowSize, m_rulesLUT, m_changesAvailableLUT, particleColor, obstacleColor, idleColor);
 	m_concreteApplyRulesFunction = [&](sf::Uint8* pixelptr, sf::Vector2u imgSize) {applyRulesOpenCL(pixelptr, imgSize); };
 }
 
@@ -118,5 +118,5 @@ void MargolusNeighborhoodSimulator::applyRulesOpenMP(sf::Uint8* pixelptr, const 
 
 void MargolusNeighborhoodSimulator::applyRulesOpenCL(sf::Uint8* pixelptr, const sf::Vector2u& imgSize)
 {
-	m_ocl->ApplyMargolusRules(pixelptr, imgSize);
+	m_ocl->ApplyMargolusRules(pixelptr, imgSize, m_pixelOffset);
 }

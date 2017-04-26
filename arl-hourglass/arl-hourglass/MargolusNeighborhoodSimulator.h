@@ -1,7 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include <functional>
-#include "OpenCL.h"
+#include "MargolusNeighborhoodSimulatorOpenCL.h"
 
 class MargolusNeighborhoodSimulator
 {
@@ -15,7 +15,7 @@ public:
 
 	void ApplyMargolusRules(sf::Image& inOutImage);
 	void ActivateOpenMP();
-	void ActivateOpenCL(const sf::Vector2u& windowSize);
+	void ActivateOpenCL(const sf::Vector2u& windowSize, const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor);
 
 private:
 	static bool isBitSet(const char& bits, const char& desiredBit);
@@ -31,7 +31,7 @@ private:
 	sf::Color m_obstacleColor;
 	sf::Color m_idleColor;
 	unsigned m_pixelOffset = 1;
-	OpenCL* m_ocl = nullptr;
+	MargolusNeighborhoodSimulatorOpenCL* m_ocl = nullptr;
 
 	std::function<void(sf::Uint8* pixelptr, const sf::Vector2u& imgSize)> m_concreteApplyRulesFunction;
 };

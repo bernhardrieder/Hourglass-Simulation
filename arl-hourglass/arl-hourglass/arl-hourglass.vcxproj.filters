@@ -27,7 +27,7 @@
     <ClCompile Include="HourglassSimulation.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
-    <ClCompile Include="OpenCL.cpp">
+    <ClCompile Include="MargolusNeighborhoodSimulatorOpenCL.cpp">
       <Filter>Quelldateien</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +53,7 @@
     <ClInclude Include="cl.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="OpenCL.h">
+    <ClInclude Include="MargolusNeighborhoodSimulatorOpenCL.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
   </ItemGroup>
