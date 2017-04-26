@@ -70,9 +70,9 @@ int main(int argc, char* argv[])
 	Hourglass hourglass({ 300, 1000 }, 8, 0.10f, wallColor, sandColor, idleColor);
 	sf::Vector2u windowDimensions = {1000, 1000};
 
-	//sf::ContextSettings settings;
-	//settings.antialiasingLevel = 4;
-	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder"/*, sf::Style::Default, settings*/);
+	sf::ContextSettings settings;
+	settings.antialiasingLevel = 8;
+	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Default, settings);
 	
 	//test sand placed by mouse button
 	sf::VertexArray placedSand(sf::Points);
@@ -85,10 +85,10 @@ int main(int argc, char* argv[])
 	sandTeleportBrush.setFillColor(sf::Color::Yellow);
 	sandTeleportBrushMarker.setFillColor(sf::Color(255, 0, 0, 50));
 
+	//create window sized texture with hourglass in it
 	sf::Texture windowSizedTextureWithHourglass;
 	sf::RenderTexture rtWithHourglassInside;
 	{
-		//create window sized texture with hourglass in it
 		if (!rtWithHourglassInside.create(windowDimensions.x, windowDimensions.y))
 		{
 			std::cerr << "Cannot create rendertexture - File " << __FILE__ << ", Line " << __LINE__;
@@ -128,37 +128,19 @@ int main(int argc, char* argv[])
 					sandTeleportBrush.setRadius(sandTeleportBrushRadius);
 					sandTeleportBrushMarker.setRadius(sandTeleportBrushRadius);
 				}
-				else if (event.key.code == sf::Keyboard::Left)
+				else if (event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::Right)
 				{
 					sf::Sprite sprite(windowSizedTextureWithHourglass);		
 					sprite.setOrigin(500, 500);
 					sprite.setPosition(500, 500);
-					sprite.rotate(-45);
+
+					sprite.rotate(event.key.code == sf::Keyboard::Left ? -45 : 45);
 
 					rtWithHourglassInside.clear(wallColor);
 					rtWithHourglassInside.draw(sprite);
 					rtWithHourglassInside.display();
 
 					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
-
-					//windowSizedTextureWithHourglass.
-					//hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)).rotate(-90);
-					//rotate hourglass by 45 degree to the left
-				}
-				else if (event.key.code == sf::Keyboard::Right)
-				{
-					sf::Sprite sprite(windowSizedTextureWithHourglass);
-					sprite.setOrigin(500, 500);
-					sprite.setPosition(500, 500);
-					sprite.rotate(45);
-
-					rtWithHourglassInside.clear(wallColor);
-					rtWithHourglassInside.draw(sprite);
-					rtWithHourglassInside.display();
-
-					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
-					//hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)).rotate(+90);
-					//rotate hourglass by 45 degree to the right
 				}
 			}
 		}
@@ -180,13 +162,8 @@ int main(int argc, char* argv[])
 			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
 
-		sf::Sprite sprite(windowSizedTextureWithHourglass);
-		sprite.setOrigin(500, 500);
-		sprite.setPosition(500, 500);
-		//sprite.rotate(45);
-
 		window.clear(wallColor);
-		window.draw(sprite);
+		window.draw(sf::Sprite(windowSizedTextureWithHourglass));
 		window.draw(placedSand);
 		window.draw(sandTeleportBrushMarker);
 		window.display();
