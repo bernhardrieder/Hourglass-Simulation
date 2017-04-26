@@ -11,10 +11,6 @@ public:
 	Hourglass& operator=(Hourglass&& other) = delete; // move assignment
 	~Hourglass();
 
-	//sf::RenderTexture& GetRenderTexture();
-	const sf::Texture& GetTexture();
-	sf::Image& GetImage();
-	void RefreshTexture();
 	sf::Sprite& GetSpriteCenteredTo(sf::Vector2u centerToPosition);
 
 private:

@@ -143,6 +143,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Hourglass.cpp" />
+    <ClCompile Include="HourglassSimulation.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MargolusNeighborhoodSimulator.cpp" />
   </ItemGroup>
@@ -151,6 +152,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Hourglass.h" />
+    <ClInclude Include="HourglassSimulation.h" />
     <ClInclude Include="LookUpTables.h" />
     <ClInclude Include="MargolusNeighborhoodSimulator.h" />
   </ItemGroup>

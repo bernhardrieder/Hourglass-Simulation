@@ -14,24 +14,9 @@ Hourglass::~Hourglass()
 {
 }
 
-const sf::Texture& Hourglass::GetTexture()
-{
-	return m_texture;
-}
-
-sf::Image& Hourglass::GetImage()
-{
-	return m_image;
-}
-
-void Hourglass::RefreshTexture()
-{
-	m_texture.loadFromImage(m_image);
-}
-
 sf::Sprite& Hourglass::GetSpriteCenteredTo(sf::Vector2u centerPosition)
 {
-	m_sprite.setTexture(GetTexture(), true);
+	m_sprite.setTexture(m_texture, true);
 	m_sprite.setOrigin(m_dimensions.x / 2.f, m_dimensions.y / 2.f);
 	m_sprite.setPosition(centerPosition.x, centerPosition.y);
 	return m_sprite;
@@ -79,8 +64,8 @@ bool Hourglass::create(unsigned sandFlowWidth, float emptyPercentage)
 	m_renderTexture.draw(hourGlassWalls);
 	m_renderTexture.display();
 
-	m_image = m_renderTexture.getTexture().copyToImage(); 
-	RefreshTexture();
+	m_image = m_renderTexture.getTexture().copyToImage();
+	m_texture.loadFromImage(m_image);
 
 	return true;
 }
