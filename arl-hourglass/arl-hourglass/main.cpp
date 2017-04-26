@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
 
 bool hasPixelDesiredColor(const sf::Uint8* const inputPixel, const sf::Color& desiredColor);
 bool isBitSet(const char& bits, const char& desiredBit);
-void applyColor(sf::Uint8* inOutPixel, const sf::Color& color);
+void applyColorToPixel(sf::Uint8* inOutPixel, const sf::Color& color);
 
 bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::Color& sandColor, const sf::Color& obstacleColor, const sf::Color& freeColor)
 {
@@ -257,29 +257,34 @@ bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::C
 	{
 		for (int y = pixelOffset; y < imgSize.y - pixelOffset; y += 2)
 		{
-			long row1 = 4 * (y * imgSize.x + x);
-			long row2 = 4 * ((y + 1) * imgSize.x + x);
-			long pixelPositions[4] = {row1 , row1 + 4, row2, row2 + 4};
+			int row1 = 4 * (y * imgSize.x + x);
+			int row2 = row1 + (4 * imgSize.x);
+			int pixelPositions[4] = {row1 , row1 + 4, row2, row2 + 4};
 			/******************* CHECK SAND CONSTELLATION AND WRITE BITS *******************/
+			/*
+			 * bits represent:
+			 * 0 = upper left
+			 * 1 = upper right
+			 * 2 = lower left
+			 * 3 = lower right
+			 */
 			char sandBits = 0;
 			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
-			{
-				sandBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], sandColor) ? 1 << bitIndex : 0; //upper left
-			}
+				sandBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], sandColor) ? 1 << bitIndex : 0;
+			
 
 			/******************* GET MARGULOS NEIGHBORHOOD *******************/
-
-			if (sandBits == 0 || sandBits == 4 || sandBits == 8 || sandBits == 12 || sandBits == 13 || sandBits == 14 || sandBits == 15)
+			if (!AreThereAnyMargolusNeighborhoodChangesLUT[sandBits])
 				continue;
 
-			char margolusResult = MargolusNeighborhoodRules[sandBits];
+			char margolusRuleBits = MargolusNeighborhoodRulesLUT[sandBits];
 			if (sandBits == 3)
 			{
 				//determine random if it remains 3 or will be 12
-				margolusResult = 12;
+				margolusRuleBits = 12;
 			}
 
-			/******************* CHECK OBSTACLES AND WRITE BITS *******************/
+			/******************* CHECK FOR OBSTACLES AND WRITE BITS *******************/
 			char wallBits = 0;
 			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
 			{
@@ -287,26 +292,17 @@ bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::C
 					wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], obstacleColor) ? 1 << bitIndex : 0;
 			}
 
-			/******************* CHECK IF USABLE *******************/
-			bool resultUsable = true;
-			// just check bits which are used in result and not checked yet
-			char mustCheckIfObstacleBits = ~sandBits & margolusResult;
-			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
-			{
-				if (isBitSet(mustCheckIfObstacleBits, bitIndex))
-					resultUsable &= !isBitSet(wallBits, bitIndex);
-			}
-
-			if (!resultUsable)
+			/******************* CHECK IF NEW CONSTELLATION IS DOABLE *******************/
+			// ~wallBits -> 0 = wall, 1 = usable
+			if ((~wallBits & margolusRuleBits) != margolusRuleBits)
 				continue;
-
 
 			/******************* APPLY NEW COLORS/ MARGOLUS RULES *******************/
 			for(char bitIndex = 0; bitIndex < 4; ++bitIndex)
 			{
 				//if current bit isn't wall then go on
 				if (!isBitSet(wallBits, bitIndex))
-					applyColor(&pixelptr[pixelPositions[bitIndex]], isBitSet(margolusResult,bitIndex) ? sandColor : freeColor);
+					applyColorToPixel(&pixelptr[pixelPositions[bitIndex]], isBitSet(margolusRuleBits,bitIndex) ? sandColor : freeColor);
 			}
 
 			somethingApplied |= true;
@@ -323,17 +319,9 @@ bool isBitSet(const char& bits, const char& desiredBit)
 bool hasPixelDesiredColor(const sf::Uint8* const inputPixel, const sf::Color& desiredColor)
 {
 	return *(reinterpret_cast<const sf::Color* const>(inputPixel)) == desiredColor;
-	//return inputPixel[0] == desiredColor.r &&
-	//	inputPixel[1] == desiredColor.g &&
-	//	inputPixel[2] == desiredColor.b &&
-	//	inputPixel[3] == desiredColor.a;
 }
 
-void applyColor(sf::Uint8* inOutPixel, const sf::Color& color)
+void applyColorToPixel(sf::Uint8* inOutPixel, const sf::Color& color)
 {
 	*(reinterpret_cast<sf::Color*>(inOutPixel)) = color;
-	//inOutPixel[0] = color.r;
-	//inOutPixel[1] = color.g;
-	//inOutPixel[2] = color.b;
-	//inOutPixel[3] = color.a;
 }
