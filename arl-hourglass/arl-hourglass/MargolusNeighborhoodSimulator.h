@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <functional>
 
 class MargolusNeighborhoodSimulator
 {
@@ -20,6 +21,9 @@ private:
 	static bool hasPixelDesiredColor(const sf::Uint8* const inputPixel, const sf::Color& desiredColor);
 	static void applyColorToPixel(sf::Uint8* inOutPixel, const sf::Color& color);
 
+	void applyRulesOpenMP(sf::Image& inOutImage);
+	void applyRulesOpenCL(sf::Image& inOutImage);
+
 	const char* m_rulesLUT;
 	const bool* m_changesAvailableLUT;
 	sf::Color m_particleColor;
@@ -27,5 +31,7 @@ private:
 	sf::Color m_idleColor;
 
 	unsigned m_pixelOffset = 1;
+
+	std::function<void(sf::Image& inOutImage)> m_concreteApplyRulesFunction;
 };
 
