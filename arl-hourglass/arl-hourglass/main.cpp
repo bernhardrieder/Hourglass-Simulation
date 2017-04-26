@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
 			static unsigned offset = 0;
 			//do margolus
 			sf::Image newImg = modifiedTex.copyToImage();
-			if(applyMargolusRules(offset, newImg, sandColor, sf::Color::Black, sf::Color::White))
+			if(applyMargolusRules(offset++, newImg, sandColor, sf::Color::Black, sf::Color::White))
 			{
 				if (!modifiedTex.loadFromImage(newImg))
 				{
@@ -228,7 +228,6 @@ int main(int argc, char* argv[])
 
 				hourglassSprite.setTexture(modifiedTex);
 			}
-			offset += 1;
 			offset %= 2;
 		}
 
@@ -262,23 +261,19 @@ bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::C
 			long row2 = 4 * ((y + 1) * imgSize.x + x);
 			long pixelPositions[4] = {row1 , row1 + 4, row2, row2 + 4};
 			/******************* CHECK SAND CONSTELLATION AND WRITE BITS *******************/
-			char sandConstellation = 0;
-			sandConstellation |= hasPixelDesiredColor(&pixelptr[pixelPositions[0]], sandColor) ? 1 : 0; //upper left
-			sandConstellation |= hasPixelDesiredColor(&pixelptr[pixelPositions[1]], sandColor) ? 2 : 0; //upper right
-			sandConstellation |= hasPixelDesiredColor(&pixelptr[pixelPositions[2]], sandColor) ? 4 : 0; //lower left
-			sandConstellation |= hasPixelDesiredColor(&pixelptr[pixelPositions[3]], sandColor) ? 8 : 0; //lower right
+			char sandBits = 0;
+			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
+			{
+				sandBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], sandColor) ? 1 << bitIndex : 0; //upper left
+			}
 
 			/******************* GET MARGULOS NEIGHBORHOOD *******************/
 
-			if (sandConstellation == 0 || sandConstellation == 4 || sandConstellation == 8 || sandConstellation == 12 || sandConstellation == 13 || sandConstellation == 14 || sandConstellation == 15)
+			if (sandBits == 0 || sandBits == 4 || sandBits == 8 || sandBits == 12 || sandBits == 13 || sandBits == 14 || sandBits == 15)
 				continue;
-			else
-			{
-				//std::cout << "margolus!";
-			}
 
-			char margolusResult = MargolusNeighborhoodRules[sandConstellation];
-			if (sandConstellation == 3)
+			char margolusResult = MargolusNeighborhoodRules[sandBits];
+			if (sandBits == 3)
 			{
 				//determine random if it remains 3 or will be 12
 				margolusResult = 12;
@@ -286,36 +281,33 @@ bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::C
 
 			/******************* CHECK OBSTACLES AND WRITE BITS *******************/
 			char wallBits = 0;
-			wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[0]], obstacleColor) ? 1 : 0;
-			wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[1]], obstacleColor) ? 2 : 0;
-			wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[2]], obstacleColor) ? 4 : 0;
-			wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[3]], obstacleColor) ? 8 : 0;
+			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
+			{
+				if (!isBitSet(sandBits, bitIndex))
+					wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], obstacleColor) ? 1 << bitIndex : 0;
+			}
 
 			/******************* CHECK IF USABLE *******************/
 			bool resultUsable = true;
-			char mustCheckIfUsable = ~sandConstellation & margolusResult;
-			if (isBitSet(mustCheckIfUsable, 0))
-				resultUsable &= !isBitSet(wallBits, 0);
-			if (isBitSet(mustCheckIfUsable, 1))
-				resultUsable &= !isBitSet(wallBits, 1);
-			if (isBitSet(mustCheckIfUsable, 2))
-				resultUsable &= !isBitSet(wallBits, 2);
-			if (isBitSet(mustCheckIfUsable, 3))
-				resultUsable &= !isBitSet(wallBits, 3);
+			// just check bits which are used in result and not checked yet
+			char mustCheckIfObstacleBits = ~sandBits & margolusResult;
+			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
+			{
+				if (isBitSet(mustCheckIfObstacleBits, bitIndex))
+					resultUsable &= !isBitSet(wallBits, bitIndex);
+			}
 
 			if (!resultUsable)
 				continue;
 
 
 			/******************* APPLY NEW COLORS/ MARGOLUS RULES *******************/
-			if (!isBitSet(wallBits, 0))
-				applyColor(&pixelptr[pixelPositions[0]], isBitSet(margolusResult, 0) ? sandColor : freeColor);
-			if (!isBitSet(wallBits, 1))
-				applyColor(&pixelptr[pixelPositions[1]], isBitSet(margolusResult, 1) ? sandColor : freeColor);
-			if (!isBitSet(wallBits, 2))
-				applyColor(&pixelptr[pixelPositions[2]], isBitSet(margolusResult, 2) ? sandColor : freeColor);
-			if (!isBitSet(wallBits, 3))
-				applyColor(&pixelptr[pixelPositions[3]], isBitSet(margolusResult, 3) ? sandColor : freeColor);
+			for(char bitIndex = 0; bitIndex < 4; ++bitIndex)
+			{
+				//if current bit isn't wall then go on
+				if (!isBitSet(wallBits, bitIndex))
+					applyColor(&pixelptr[pixelPositions[bitIndex]], isBitSet(margolusResult,bitIndex) ? sandColor : freeColor);
+			}
 
 			somethingApplied |= true;
 		}
