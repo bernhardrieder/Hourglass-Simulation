@@ -51,6 +51,7 @@ namespace commandLineHandles
  * img = renderTex.getTexture().copyToImage();
  * img.createMaskFromColor(sf::Color::Magenta);
  */
+void colorPixelAtPosition(sf::Image& inOutImage, const sf::Vector2i& position, const float& radius, const sf::Color& newColor, const sf::Color& restrictedColor);
 
 int main(int argc, char* argv[])
 {
@@ -62,28 +63,25 @@ int main(int argc, char* argv[])
 
 	switch (commandLineHandles::requestCmdLine(argc, argv))
 	{
-		case commandLineHandles::Error: getchar(); return 0;
-		case commandLineHandles::CPU_Usage: margolusSimulator.ActivateOpenMP(); break;
-		case commandLineHandles::GPU_Usage: margolusSimulator.ActivateOpenCL(); break;
+	case commandLineHandles::Error: getchar();
+		return 0;
+	case commandLineHandles::CPU_Usage: margolusSimulator.ActivateOpenMP();
+		break;
+	case commandLineHandles::GPU_Usage: margolusSimulator.ActivateOpenCL();
+		break;
 	}
 
-	Hourglass hourglass({ 300, 1000 }, 8, 0.10f, wallColor, sandColor, idleColor);
+	Hourglass hourglass({300, 1000}, 8, 0.10f, wallColor, sandColor, idleColor);
 	sf::Vector2u windowDimensions = {1000, 1000};
 
 	sf::ContextSettings settings;
 	settings.antialiasingLevel = 8;
-	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Default, settings);
-	
-	//test sand placed by mouse button
-	sf::VertexArray placedSand(sf::Points);
+	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Titlebar | sf::Style::Close, settings);
 
-	sf::Clock clock;
-
+	// create sand teleport brush for delete and adding sand
 	unsigned sandTeleportBrushRadius = 10;
 	sf::CircleShape sandTeleportBrush = sf::CircleShape(sandTeleportBrushRadius);
-	sf::CircleShape sandTeleportBrushMarker = sf::CircleShape(sandTeleportBrushRadius);
-	sandTeleportBrush.setFillColor(sf::Color::Yellow);
-	sandTeleportBrushMarker.setFillColor(sf::Color(255, 0, 0, 50));
+	sandTeleportBrush.setFillColor(sf::Color(255, 0, 0, 50));
 
 	//create window sized texture with hourglass in it
 	sf::Texture windowSizedTextureWithHourglass;
@@ -102,14 +100,18 @@ int main(int argc, char* argv[])
 	}
 
 	/********************************************** RENDER ***********************************************/
+	sf::Clock clock;
 	while (window.isOpen())
 	{
+		sandTeleportBrush.setOrigin(sandTeleportBrushRadius, sandTeleportBrushRadius);
+		sandTeleportBrush.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
+
 		sf::Event event;
 		while (window.pollEvent(event))
 		{
 			if (event.type == sf::Event::Closed)
 				window.close();
-			if (event.type == sf::Event::KeyPressed)
+			if (window.hasFocus() && event.type == sf::Event::KeyPressed)
 			{
 				if (event.key.code == sf::Keyboard::Escape)
 					window.close();
@@ -118,7 +120,6 @@ int main(int argc, char* argv[])
 					//increase hourglass sand teleporter brush size
 					++sandTeleportBrushRadius;
 					sandTeleportBrush.setRadius(sandTeleportBrushRadius);
-					sandTeleportBrushMarker.setRadius(sandTeleportBrushRadius);
 				}
 				else if (event.key.code == sf::Keyboard::Subtract || event.key.code == sf::Keyboard::Dash) //US/UK layout -> Dash == -
 				{
@@ -126,11 +127,10 @@ int main(int argc, char* argv[])
 					if (sandTeleportBrushRadius > 0)
 						--sandTeleportBrushRadius;
 					sandTeleportBrush.setRadius(sandTeleportBrushRadius);
-					sandTeleportBrushMarker.setRadius(sandTeleportBrushRadius);
 				}
 				else if (event.key.code == sf::Keyboard::Left || event.key.code == sf::Keyboard::Right)
 				{
-					sf::Sprite sprite(windowSizedTextureWithHourglass);		
+					sf::Sprite sprite(windowSizedTextureWithHourglass);
 					sprite.setOrigin(500, 500);
 					sprite.setPosition(500, 500);
 
@@ -144,13 +144,14 @@ int main(int argc, char* argv[])
 				}
 			}
 		}
-		if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+		
+		// brush input
+		if (window.hasFocus() && (sf::Mouse::isButtonPressed(sf::Mouse::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Right)))
 		{
-			using namespace sf;
-			placedSand.append(Vertex(static_cast<Vector2f>(Mouse::getPosition(window)), Color::Yellow));
+			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
+			colorPixelAtPosition(img, sf::Mouse::getPosition(window), sandTeleportBrush.getRadius(), sf::Mouse::isButtonPressed(sf::Mouse::Left) ? idleColor : sandColor, wallColor);
+			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
-		sandTeleportBrushMarker.setOrigin(sandTeleportBrushRadius, sandTeleportBrushRadius);
-		sandTeleportBrushMarker.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
 
 		sf::Time elapsed = clock.restart();
 		//hourglassSprite.rotate(10*elapsed.asSeconds());
@@ -164,10 +165,30 @@ int main(int argc, char* argv[])
 
 		window.clear(wallColor);
 		window.draw(sf::Sprite(windowSizedTextureWithHourglass));
-		window.draw(placedSand);
-		window.draw(sandTeleportBrushMarker);
+		window.draw(sandTeleportBrush);
 		window.display();
 	}
 
 	return 0;
+}
+
+void colorPixelAtPosition(sf::Image& inOutImage, const sf::Vector2i& position, const float& radius, const sf::Color& newColor, const sf::Color& restrictedColor)
+{
+	for (int x = -radius; x <= radius; ++x)
+	{
+		for (int y = -radius; y <= radius; ++y)
+		{
+			sf::Vector2i newPos = position + sf::Vector2i(x, y);
+			if (newPos.x < 0 || newPos.y < 0)
+				continue;
+
+			float distance = std::sqrt(std::pow(newPos.x - position.x, 2) + std::pow(newPos.y - position.y, 2));
+			if (distance > radius)
+				continue;
+
+			auto pixelColor = inOutImage.getPixel(newPos.x, newPos.y);
+			if (pixelColor != restrictedColor)
+				inOutImage.setPixel(newPos.x, newPos.y, newColor);
+		}
+	}
 }
