@@ -1,5 +1,7 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
+#include "MargolusNeighborhoodSimulator.h"
+#include "Hourglass.h"
 
 namespace commandLineHandles
 {
@@ -50,108 +52,27 @@ namespace commandLineHandles
  * img.createMaskFromColor(sf::Color::Magenta);
  */
 
-bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::Color& sandColor, const sf::Color& obstacleColor, const sf::Color& freeColor);
-
 int main(int argc, char* argv[])
 {
+	sf::Color sandColor = sf::Color(230, 197, 92, 255);
+	sf::Color wallColor = sf::Color::Black;
+	sf::Color idleColor = sf::Color::White;
+
+	MargolusNeighborhoodSimulator margolusSimulator(MargolusNeighborhood::Sand::RulesLUT, MargolusNeighborhood::Sand::ChangesAvailableLUT, sandColor, wallColor, idleColor);
+
 	switch (commandLineHandles::requestCmdLine(argc, argv))
 	{
-	case commandLineHandles::Error: getchar();
-		return 0;
-	case commandLineHandles::CPU_Usage: break;
-	case commandLineHandles::GPU_Usage: break;
+		case commandLineHandles::Error: getchar(); return 0;
+		case commandLineHandles::CPU_Usage: margolusSimulator.ActivateOpenMP(); break;
+		case commandLineHandles::GPU_Usage: margolusSimulator.ActivateOpenCL(); break;
 	}
 
-
-	sf::Vector2u hourGlassDimensions = {300, 1000};
+	Hourglass hourglass({ 300, 1000 }, 8, 0.90f, wallColor, sandColor, idleColor);
 	sf::Vector2u windowDimensions = {1000, 1000};
 
 	//sf::ContextSettings settings;
 	//settings.antialiasingLevel = 4;
 	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder"/*, sf::Style::Default, settings*/);
-
-
-	/********************************************** CREATE HOURGLASS ***********************************************/
-	sf::RenderTexture hourGlassRenderTexture;
-	if (!hourGlassRenderTexture.create(hourGlassDimensions.x, hourGlassDimensions.y))
-	{
-		std::cerr << "cant create render texture";
-		//error
-	}
-
-	// create an array of 3 vertices that define a triangle primitive
-	sf::VertexArray hourGlassWalls(sf::Triangles, 6);
-
-	signed hourGlassFlowWidth = 6;
-	// define the position of the triangle's points
-	//left wall
-	hourGlassWalls[0].position = {0,0};
-	hourGlassWalls[1].position = {(hourGlassDimensions.x / 2.f) - hourGlassFlowWidth / 2, hourGlassDimensions.y / 2.f};
-	hourGlassWalls[2].position = {0, static_cast<float>(hourGlassDimensions.y)};
-	//right wall
-	hourGlassWalls[3].position = {static_cast<float>(hourGlassDimensions.x), 0};
-	hourGlassWalls[4].position = {(hourGlassDimensions.x / 2.f) + hourGlassFlowWidth / 2, hourGlassDimensions.y / 2.f};
-	hourGlassWalls[5].position = {static_cast<float>(hourGlassDimensions.x), static_cast<float>(hourGlassDimensions.y)};
-
-	// define the color of the triangle's points
-	hourGlassWalls[0].color = sf::Color::Black;
-	hourGlassWalls[1].color = sf::Color::Black;
-	hourGlassWalls[2].color = sf::Color::Black;
-	hourGlassWalls[3].color = sf::Color::Black;
-	hourGlassWalls[4].color = sf::Color::Black;
-	hourGlassWalls[5].color = sf::Color::Black;
-
-	//create sand
-	sf::Color sandColor = sf::Color(230, 197, 92, 255);
-	float emptyPercentage = 0.8f;
-	sf::VertexArray hourGlassSand(sf::Quads);
-	hourGlassSand.append(sf::Vertex(sf::Vector2f(static_cast<float>(hourGlassDimensions.x), hourGlassDimensions.y * (emptyPercentage/2.f)), sandColor)); // upper right
-	hourGlassSand.append(sf::Vertex(sf::Vector2f(0, hourGlassDimensions.y * (emptyPercentage/2.f)), sandColor)); // upper left
-	hourGlassSand.append(sf::Vertex(sf::Vector2f(0, hourGlassDimensions.y / 2.f), sandColor)); // lower left
-	hourGlassSand.append(sf::Vertex(sf::Vector2f(static_cast<float>(hourGlassDimensions.x), hourGlassDimensions.y / 2.f), sandColor)); // lower right
-
-	//render hourglass into rendertexture!
-	hourGlassRenderTexture.clear(sf::Color::White);
-	hourGlassRenderTexture.draw(hourGlassSand);
-	hourGlassRenderTexture.draw(hourGlassWalls);
-	hourGlassRenderTexture.display();
-
-	// get the target texture (where the stuff has been drawn)
-	//sf::Texture& texture = const_cast<sf::Texture&>(hourGlassRenderTexture.getTexture());
-	//sf::Color col = sf::Color::Green;
-	//sf::Uint8 pixel[4] = { col.r,col.g,col.b,col.a };
-	//texture.update(pixel, 1, 1, 500, 500);
-
-	//pixel manipulation
-	sf::Image img = hourGlassRenderTexture.getTexture().copyToImage();
-	////img.setPixel(149, 499, sf::Color::Red);
-	//auto imgSize = img.getSize();
-	//sf::Uint8* pixelptr = const_cast<sf::Uint8*>(img.getPixelsPtr());
-
-	//for (int x = 0; x < imgSize.x; x += 3)
-	//{
-	//	for (int y = 0; y < imgSize.y / 2; y += 3)
-	//	{
-	//		size_t index = 4 * (y * imgSize.x + x);
-	//		pixelptr[index + 0] = 255; //r
-	//		pixelptr[index + 1] = 0; //g
-	//		pixelptr[index + 2] = 0; //b
-	//		pixelptr[index + 3] = 255; //a
-	//	}
-	//}
-
-	//use manipulated image and create renderable hourglass sprite
-	sf::Texture modifiedTex;
-	if (!modifiedTex.loadFromImage(img))
-	{
-		std::cerr << "fucking load from image error";
-		getchar();
-		return 0;
-	}
-	sf::Sprite hourglassSprite(modifiedTex);
-	hourglassSprite.setOrigin(hourGlassDimensions.x / 2.f, hourGlassDimensions.y / 2.f);
-	hourglassSprite.setPosition(windowDimensions.x / 2.f, windowDimensions.y / 2.f);
-	//hourglassSprite.rotate(45);
 	
 	//test sand placed by mouse button
 	sf::VertexArray placedSand(sf::Points);
@@ -163,6 +84,22 @@ int main(int argc, char* argv[])
 	sf::CircleShape sandTeleportBrushMarker = sf::CircleShape(sandTeleportBrushRadius);
 	sandTeleportBrush.setFillColor(sf::Color::Yellow);
 	sandTeleportBrushMarker.setFillColor(sf::Color(255, 0, 0, 50));
+
+	sf::Texture windowSizedTextureWithHourglass;
+	{
+		//create window sized texture with hourglass in it
+		sf::RenderTexture rtWithHourglassInside;
+		if (!rtWithHourglassInside.create(windowDimensions.x, windowDimensions.y))
+		{
+			std::cerr << "Cannot create rendertexture - File " << __FILE__ << ", Line " << __LINE__;
+			getchar();
+			return 0;
+		}
+		rtWithHourglassInside.clear(wallColor);
+		rtWithHourglassInside.draw(hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)));
+		rtWithHourglassInside.display();
+		windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
+	}
 
 	/********************************************** RENDER ***********************************************/
 	while (window.isOpen())
@@ -193,10 +130,12 @@ int main(int argc, char* argv[])
 				}
 				else if (event.key.code == sf::Keyboard::Left)
 				{
+					//hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)).rotate(-90);
 					//rotate hourglass by 45 degree to the left
 				}
 				else if (event.key.code == sf::Keyboard::Right)
 				{
+					//hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)).rotate(+90);
 					//rotate hourglass by 45 degree to the right
 				}
 			}
@@ -214,114 +153,21 @@ int main(int argc, char* argv[])
 
 		if (true)
 		{
-			static unsigned offset = 0;
-			//do margolus
-			sf::Image newImg = modifiedTex.copyToImage();
-			if(applyMargolusRules(offset++, newImg, sandColor, sf::Color::Black, sf::Color::White))
-			{
-				if (!modifiedTex.loadFromImage(newImg))
-				{
-					std::cerr << "fucking load from image error";
-					getchar();
-					return 0;
-				}
-
-				hourglassSprite.setTexture(modifiedTex);
-			}
-			offset %= 2;
+			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
+			margolusSimulator.ApplyMargolusRules(img);
+			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
 
+		sf::Sprite sprite(windowSizedTextureWithHourglass);
+		//sprite.setOrigin(1000, 1000);
+		//sprite.setPosition(1000, 1000);
+
 		window.clear(sf::Color(100, 100, 100, 100));
-		window.draw(hourglassSprite);
+		window.draw(sprite);
 		window.draw(placedSand);
 		window.draw(sandTeleportBrushMarker);
 		window.display();
 	}
 
 	return 0;
-}
-
-#include "LookUpTables.h"
-
-bool hasPixelDesiredColor(const sf::Uint8* const inputPixel, const sf::Color& desiredColor);
-bool isBitSet(const char& bits, const char& desiredBit);
-void applyColorToPixel(sf::Uint8* inOutPixel, const sf::Color& color);
-
-bool applyMargolusRules(const unsigned& pixelOffset, sf::Image& img, const sf::Color& sandColor, const sf::Color& obstacleColor, const sf::Color& freeColor)
-{
-	bool somethingApplied = false;
-	sf::Uint8* pixelptr = const_cast<sf::Uint8*>(img.getPixelsPtr());
-	auto imgSize = img.getSize();
-
-	for (int x = pixelOffset; x < imgSize.x - pixelOffset; x += 2)
-	{
-		for (int y = pixelOffset; y < imgSize.y - pixelOffset; y += 2)
-		{
-			int row1 = 4 * (y * imgSize.x + x);
-			int row2 = row1 + (4 * imgSize.x);
-			int pixelPositions[4] = {row1 , row1 + 4, row2, row2 + 4};
-			/******************* CHECK SAND CONSTELLATION AND WRITE BITS *******************/
-			/*
-			 * bits represent:
-			 * 0 = upper left
-			 * 1 = upper right
-			 * 2 = lower left
-			 * 3 = lower right
-			 */
-			char sandBits = 0;
-			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
-				sandBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], sandColor) ? 1 << bitIndex : 0;
-			
-
-			/******************* GET MARGULOS NEIGHBORHOOD *******************/
-			if (!AreThereAnyMargolusNeighborhoodChangesLUT[sandBits])
-				continue;
-
-			char margolusRuleBits = MargolusNeighborhoodRulesLUT[sandBits];
-			if (sandBits == 3)
-			{
-				//determine random if it remains 3 or will be 12
-				margolusRuleBits = 12;
-			}
-
-			/******************* CHECK FOR OBSTACLES AND WRITE BITS *******************/
-			char wallBits = 0;
-			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
-			{
-				if (!isBitSet(sandBits, bitIndex))
-					wallBits |= hasPixelDesiredColor(&pixelptr[pixelPositions[bitIndex]], obstacleColor) ? 1 << bitIndex : 0;
-			}
-
-			/******************* CHECK IF NEW CONSTELLATION IS DOABLE *******************/
-			// ~wallBits -> 0 = wall, 1 = usable
-			if ((~wallBits & margolusRuleBits) != margolusRuleBits)
-				continue;
-
-			/******************* APPLY NEW COLORS/ MARGOLUS RULES *******************/
-			for(char bitIndex = 0; bitIndex < 4; ++bitIndex)
-			{
-				//if current bit isn't wall then go on
-				if (!isBitSet(wallBits, bitIndex))
-					applyColorToPixel(&pixelptr[pixelPositions[bitIndex]], isBitSet(margolusRuleBits,bitIndex) ? sandColor : freeColor);
-			}
-
-			somethingApplied |= true;
-		}
-	}
-	return somethingApplied;
-}
-
-bool isBitSet(const char& bits, const char& desiredBit)
-{
-	return bits & (1 << desiredBit);
-}
-
-bool hasPixelDesiredColor(const sf::Uint8* const inputPixel, const sf::Color& desiredColor)
-{
-	return *(reinterpret_cast<const sf::Color* const>(inputPixel)) == desiredColor;
-}
-
-void applyColorToPixel(sf::Uint8* inOutPixel, const sf::Color& color)
-{
-	*(reinterpret_cast<sf::Color*>(inOutPixel)) = color;
 }

@@ -142,13 +142,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Hourglass.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MargolusNeighborhoodSimulator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Hourglass.h" />
     <ClInclude Include="LookUpTables.h" />
+    <ClInclude Include="MargolusNeighborhoodSimulator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
