@@ -8,22 +8,32 @@ MargolusNeighborhoodSimulator::MargolusNeighborhoodSimulator(const char ruleLUT[
 
 MargolusNeighborhoodSimulator::~MargolusNeighborhoodSimulator()
 {
+	if (m_ocl != nullptr)
+		delete m_ocl;
 }
 
 void MargolusNeighborhoodSimulator::ApplyMargolusRules(sf::Image& inOutImage)
 {
 	++m_pixelOffset %= 2;
-	m_concreteApplyRulesFunction(inOutImage);
+	sf::Uint8* pixelptr = const_cast<sf::Uint8*>(inOutImage.getPixelsPtr());
+	m_concreteApplyRulesFunction(pixelptr, inOutImage.getSize());
 }
 
 void MargolusNeighborhoodSimulator::ActivateOpenMP()
 {
 	omp_set_num_threads(omp_get_max_threads()); 
-	m_concreteApplyRulesFunction = [&](sf::Image& inOutImage) {applyRulesOpenMP(inOutImage); };
+	m_concreteApplyRulesFunction = [&](sf::Uint8* pixelptr, sf::Vector2u imgSize) {applyRulesOpenMP(pixelptr, imgSize); };
 }
 
-void MargolusNeighborhoodSimulator::ActivateOpenCL()
+void MargolusNeighborhoodSimulator::ActivateOpenCL(const sf::Vector2u& windowSize)
 {
+	int platformId = 0;
+	int deviceId = 0;
+	bool useGPU = true;
+
+	m_ocl = new OpenCL(useGPU, platformId, deviceId);
+	m_ocl->Initialize(windowSize);
+	m_concreteApplyRulesFunction = [&](sf::Uint8* pixelptr, sf::Vector2u imgSize) {applyRulesOpenCL(pixelptr, imgSize); };
 }
 
 bool MargolusNeighborhoodSimulator::isBitSet(const char& bits, const char& desiredBit)
@@ -41,13 +51,11 @@ void MargolusNeighborhoodSimulator::applyColorToPixel(sf::Uint8* inOutPixel, con
 	*(reinterpret_cast<sf::Color*>(inOutPixel)) = color;
 }
 
-void MargolusNeighborhoodSimulator::applyRulesOpenMP(sf::Image& inOutImage)
+void MargolusNeighborhoodSimulator::applyRulesOpenMP(sf::Uint8* pixelptr, const sf::Vector2u& imgSize)
 {
-	sf::Uint8* pixelptr = const_cast<sf::Uint8*>(inOutImage.getPixelsPtr());
-	auto imgSize = inOutImage.getSize();
-
 	int row1 = -1, row2 = -1, pixelPositions[4];
 	char particleBits = 0, ruleBits = 0, obstacleBits = 0;
+
 	#pragma omp parallel for private(row1, row2, pixelPositions, particleBits, ruleBits, obstacleBits)
 	for (int x = m_pixelOffset; x < imgSize.x - m_pixelOffset; x += 2)
 	{
@@ -108,6 +116,7 @@ void MargolusNeighborhoodSimulator::applyRulesOpenMP(sf::Image& inOutImage)
 	}
 }
 
-void MargolusNeighborhoodSimulator::applyRulesOpenCL(sf::Image& inOutImage)
+void MargolusNeighborhoodSimulator::applyRulesOpenCL(sf::Uint8* pixelptr, const sf::Vector2u& imgSize)
 {
+	m_ocl->ApplyMargolusRules(pixelptr, imgSize);
 }

@@ -22,19 +22,20 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 	sf::Color idleColor = sf::Color::White;
 
 	MargolusNeighborhoodSimulator margolusSimulator(MargolusNeighborhood::Sand::RulesLUT, MargolusNeighborhood::Sand::ChangesAvailableLUT, sandColor, wallColor, idleColor);
+	sf::Vector2u windowDimensions = { 1000, 1000 };
 
-	switch (handleCmdLine(argc, argv))
+	switch (parseCmdLine(argc, argv))
 	{
 	case Error: getchar();
 		return 0;
 	case CPU_Usage: margolusSimulator.ActivateOpenMP();
 		break;
-	case GPU_Usage: margolusSimulator.ActivateOpenCL();
+	case GPU_Usage: margolusSimulator.ActivateOpenCL(windowDimensions);
 		break;
 	}
 
 	Hourglass hourglass({ 300, 1000 }, 8, 0.10f, wallColor, sandColor, idleColor);
-	sf::Vector2u windowDimensions = { 1000, 1000 };
+	
 
 	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Titlebar | sf::Style::Close);
 
@@ -132,7 +133,7 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 	return 0;
 }
 
-HourglassSimulation::AppInputResult HourglassSimulation::handleCmdLine(int argc, char* argv[])
+HourglassSimulation::AppInputResult HourglassSimulation::parseCmdLine(int argc, char* argv[])
 {
 	if (argc != 2)
 	{
