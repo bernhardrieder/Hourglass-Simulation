@@ -34,7 +34,7 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		break;
 	}
 
-	Hourglass hourglass({ 300, 1000 }, 8, 0.10f, wallColor, sandColor, idleColor);
+	Hourglass hourglass({ 300, 1000 }, 12, 0.10f, wallColor, sandColor, idleColor);
 	
 
 	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Titlebar | sf::Style::Close);

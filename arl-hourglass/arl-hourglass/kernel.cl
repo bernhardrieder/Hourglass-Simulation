@@ -19,6 +19,13 @@ bool isBitSet(char* bits, char* desiredBit)
 	return *bits & (1 << *desiredBit);
 }
 
+uint randomNumber(constant int* randoms, int* globalID)
+{
+	uint seed = *(randoms+0) + *globalID;
+	uint t = seed ^ (seed << 11);
+	return *(randoms + 1) ^ (*(randoms+1) >> 19) ^ (t ^ (t >> 8));
+}
+
 __kernel void simple_iteration(
 	__global uchar* pixelptr,
 	__constant int* pixelOffset,
@@ -65,7 +72,7 @@ __kernel void simple_iteration(
 
 			char ruleBits = *(rulesLUT + particleBits);
 			if (particleBits == 3)
-				ruleBits = *(random + (y * (*xDimension) + x)/10000) < 0 ? 12 : 3;
+				ruleBits = randomNumber(random, *pixelOffset == 0 ? &row1 : &row2) % 12 < 5 ? 12 : 3;
 
 			/******************* CHECK FOR OBSTACLES AND WRITE BITS *******************/
 			char obstacleBits = 0;
