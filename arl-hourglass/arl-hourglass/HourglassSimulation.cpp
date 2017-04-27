@@ -14,7 +14,7 @@ HourglassSimulation::~HourglassSimulation()
 {
 }
 
-int HourglassSimulation::Execute(int argc, char* argv[])
+int HourglassSimulation::Execute(int argc, char* argv[]) const
 {
 	/********************************************** INITIALIZE ***********************************************/
 	sf::Color sandColor = sf::Color(230, 197, 92, 255);
@@ -34,10 +34,11 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 		break;
 	}
 
-	Hourglass hourglass({ 300, 1000 }, 8, 0.10f, wallColor, sandColor, idleColor);
+	Hourglass hourglass({ 300, 1000 }, 12, 0.10f, wallColor, sandColor, idleColor);
 	
 
 	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Titlebar | sf::Style::Close);
+	window.setFramerateLimit(0);
 
 	// create sand teleport brush for delete and adding sand
 	unsigned sandTeleportBrushRadius = 10;
@@ -114,9 +115,6 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
 
-		sf::Time elapsed = clock.restart();
-		//hourglassSprite.rotate(10*elapsed.asSeconds());
-
 		if (true)
 		{
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
@@ -128,6 +126,9 @@ int HourglassSimulation::Execute(int argc, char* argv[])
 		window.draw(sf::Sprite(windowSizedTextureWithHourglass));
 		window.draw(sandTeleportBrush);
 		window.display();
+
+		//sf::Time elapsed = clock.restart();
+		//std::cout << "one frame took: " << elapsed.asMilliseconds() << " ms!\n";
 	}
 
 	return 0;

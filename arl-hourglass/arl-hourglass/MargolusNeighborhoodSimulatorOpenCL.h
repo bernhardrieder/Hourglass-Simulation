@@ -37,7 +37,7 @@ private:
 
 	sf::Vector2u m_dataSize;
 	int m_sizeOfImage;
-	int m_randomNumbers[100];
+	int m_randomNumbers[2];
 
 	void createKernel(const sf::Vector2u& imgSize, const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor);
 	std::vector<cl::Platform> getPlatforms() const;

@@ -7,7 +7,7 @@ public:
 	HourglassSimulation();
 	~HourglassSimulation();
 
-	int Execute(int argc, char* argv[]);
+	int Execute(int argc, char* argv[]) const;
 
 private:
 	enum AppInputResult
