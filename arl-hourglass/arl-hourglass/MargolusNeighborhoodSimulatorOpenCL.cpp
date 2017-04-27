@@ -29,22 +29,23 @@ void MargolusNeighborhoodSimulatorOpenCL::Initialize(const sf::Vector2u& imgSize
 }
 
 
-void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr, const sf::Vector2u& imgSize, const unsigned& pixelOffset)
+void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr, const sf::Vector2u& imgSize, const unsigned& pixelOffset, const bool& refreshImageBuffer)
 {
 	if (imgSize != m_dataSize)
 	{
 		std::cerr << "YOU SHOULD NOT CHANGE THE IMAGE SIZE - BREAKS THE CODE!\n OPENCL WILL NOT PERFORM!";
 		return;
 	}
-	handle_clerror(m_queue.enqueueWriteBuffer(
-		m_bufferData, // which buffer to write to
-		CL_TRUE, // block until command is complete
-		0, // offset
-		m_sizeOfImage, // size of write 
-		pixelptr)); // pointer to input
 
-	handle_clerror(m_queue.enqueueWriteBuffer(
-		m_bufferPixelOffset, CL_TRUE, 0, sizeof(unsigned), &pixelOffset));
+	if (refreshImageBuffer)
+		handle_clerror(m_queue.enqueueWriteBuffer(
+			m_bufferData, // which buffer to write to
+			CL_TRUE, // block until command is complete
+			0, // offset
+			m_sizeOfImage, // size of write 
+			pixelptr)); // pointer to input
+
+	handle_clerror(m_queue.enqueueWriteBuffer(m_bufferPixelOffset, CL_TRUE, 0, sizeof(unsigned), &pixelOffset));
 
 	for(int i = 0; i < 2; ++i)
 		m_randomNumbers[i] = randomNumber(0, 10000);
@@ -62,7 +63,7 @@ void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr
 void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSize, const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor)
 {
 	m_globalRange = cl::NDRange(imgSize.x/2);
-	m_localRange = cl::NDRange(static_cast<int>(imgSize.x / m_deviceMaxWorkGroupSize + 1));
+	m_localRange = cl::NDRange(imgSize.x / m_deviceMaxWorkGroupSize + 1);
 
 	m_bufferData = cl::Buffer(m_context, CL_MEM_READ_WRITE, m_sizeOfImage * sizeof(unsigned char));
 	m_bufferDimensionX = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int));

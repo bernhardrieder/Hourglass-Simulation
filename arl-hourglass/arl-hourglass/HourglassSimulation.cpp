@@ -22,7 +22,7 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 	sf::Color idleColor = sf::Color::White;
 
 	MargolusNeighborhoodSimulator margolusSimulator(MargolusNeighborhood::Sand::RulesLUT, MargolusNeighborhood::Sand::ChangesAvailableLUT, sandColor, wallColor, idleColor);
-	sf::Vector2u windowDimensions = { 1000, 1000 };
+	sf::Vector2u windowDimensions = {1000, 1000};
 
 	switch (parseCmdLine(argc, argv))
 	{
@@ -34,8 +34,8 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		break;
 	}
 
-	Hourglass hourglass({ 300, 1000 }, 12, 0.10f, wallColor, sandColor, idleColor);
-	
+	Hourglass hourglass({300, 1000}, 12, 0.10f, wallColor, sandColor, idleColor);
+
 
 	sf::RenderWindow window(sf::VideoMode(windowDimensions.x, windowDimensions.y), "'Hourglass Simulation' by Bernhard Rieder", sf::Style::Titlebar | sf::Style::Close);
 	window.setFramerateLimit(0);
@@ -47,6 +47,7 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 
 	//create window sized texture with hourglass in it
 	sf::Texture windowSizedTextureWithHourglass;
+	sf::Sprite windowSizedSpriteWithHourglass;
 	sf::RenderTexture rtWithHourglassInside;
 	{
 		if (!rtWithHourglassInside.create(windowDimensions.x, windowDimensions.y))
@@ -59,10 +60,12 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		rtWithHourglassInside.draw(hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)));
 		rtWithHourglassInside.display();
 		windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
+		windowSizedSpriteWithHourglass.setTexture(windowSizedTextureWithHourglass, true);
 	}
 
 	/********************************************** RENDER ***********************************************/
 	sf::Clock clock;
+	bool teleportBrushApplied = true;
 	while (window.isOpen())
 	{
 		sandTeleportBrush.setOrigin(sandTeleportBrushRadius, sandTeleportBrushRadius);
@@ -102,7 +105,8 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 					rtWithHourglassInside.draw(sprite);
 					rtWithHourglassInside.display();
 
-					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
+					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage()); 
+					teleportBrushApplied = true;
 				}
 			}
 		}
@@ -110,25 +114,34 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		// brush input
 		if (window.hasFocus() && (sf::Mouse::isButtonPressed(sf::Mouse::Left) || sf::Mouse::isButtonPressed(sf::Mouse::Right)))
 		{
+			sf::Color& color = sf::Mouse::isButtonPressed(sf::Mouse::Left) ? idleColor : sandColor;
+			color = sf::Mouse::isButtonPressed(sf::Mouse::Right) ? sandColor : idleColor;
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
-			colorizePixelAtPosition(img, sf::Mouse::getPosition(window), sandTeleportBrush.getRadius(), sf::Mouse::isButtonPressed(sf::Mouse::Left) ? idleColor : sandColor, wallColor, windowDimensions);
+			colorizePixelAtPosition(img, sf::Mouse::getPosition(window), sandTeleportBrush.getRadius(), color, wallColor, windowDimensions);
 			windowSizedTextureWithHourglass.loadFromImage(img);
+			teleportBrushApplied = true;
 		}
 
 		if (true)
 		{
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
-			margolusSimulator.ApplyMargolusRules(img);
+			margolusSimulator.ApplyMargolusRules(img, teleportBrushApplied);
+			//margolusSimulator.ApplyMargolusRules(img, false);
+			//margolusSimulator.ApplyMargolusRules(img, false);
+			//margolusSimulator.ApplyMargolusRules(img, false);
+			//margolusSimulator.ApplyMargolusRules(img, false);
 			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
+		windowSizedSpriteWithHourglass.setTexture(windowSizedTextureWithHourglass);
 
 		window.clear(wallColor);
-		window.draw(sf::Sprite(windowSizedTextureWithHourglass));
+		window.draw(windowSizedSpriteWithHourglass);
 		window.draw(sandTeleportBrush);
 		window.display();
 
 		//sf::Time elapsed = clock.restart();
 		//std::cout << "one frame took: " << elapsed.asMilliseconds() << " ms!\n";
+		teleportBrushApplied = false;
 	}
 
 	return 0;

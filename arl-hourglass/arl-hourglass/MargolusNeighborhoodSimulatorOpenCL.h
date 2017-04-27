@@ -11,7 +11,7 @@ public:
 	~MargolusNeighborhoodSimulatorOpenCL();
 
 	void Initialize(const sf::Vector2u& imgSize, const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor);
-	void ApplyMargolusRules(sf::Uint8* pixelptr, const sf::Vector2u& imgSize, const unsigned& pixelOffset);
+	void ApplyMargolusRules(sf::Uint8* pixelptr, const sf::Vector2u& imgSize, const unsigned& pixelOffset, const bool& refreshImageBuffer);
 
 private:
 	const std::string m_sourceCodeFile = "kernel.cl";

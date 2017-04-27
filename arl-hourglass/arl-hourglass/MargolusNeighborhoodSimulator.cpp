@@ -19,9 +19,10 @@ MargolusNeighborhoodSimulator::~MargolusNeighborhoodSimulator()
 		delete m_ocl;
 }
 
-void MargolusNeighborhoodSimulator::ApplyMargolusRules(sf::Image& inOutImage)
+void MargolusNeighborhoodSimulator::ApplyMargolusRules(sf::Image& inOutImage, const bool& wasTeleportBrushApplied)
 {
 	++m_pixelOffset %= 2;
+	m_oclRefreshImageBuffer = wasTeleportBrushApplied;
 	sf::Uint8* pixelptr = const_cast<sf::Uint8*>(inOutImage.getPixelsPtr());
 	m_concreteApplyRulesFunction(pixelptr, inOutImage.getSize());
 }
@@ -122,5 +123,5 @@ void MargolusNeighborhoodSimulator::applyRulesOpenMP(sf::Uint8* pixelptr, const 
 
 void MargolusNeighborhoodSimulator::applyRulesOpenCL(sf::Uint8* pixelptr, const sf::Vector2u& imgSize)
 {
-	m_ocl->ApplyMargolusRules(pixelptr, imgSize, m_pixelOffset);
+	m_ocl->ApplyMargolusRules(pixelptr, imgSize, m_pixelOffset, m_oclRefreshImageBuffer);
 }
