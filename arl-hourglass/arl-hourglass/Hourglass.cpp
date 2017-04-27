@@ -24,7 +24,6 @@ sf::Sprite& Hourglass::GetSpriteCenteredTo(sf::Vector2u centerPosition)
 
 bool Hourglass::create(unsigned sandFlowWidth, float emptyPercentage)
 {
-	/********************************************** CREATE HOURGLASS ***********************************************/
 	if (!m_renderTexture.create(m_dimensions.x, m_dimensions.y))
 		return false;
 
@@ -50,8 +49,6 @@ bool Hourglass::create(unsigned sandFlowWidth, float emptyPercentage)
 	hourGlassWalls[5].color = m_wallColor;
 
 	//create sand
-	//sf::Color sandColor = sf::Color(230, 197, 92, 255);
-	//float emptyPercentage = 0.8f;
 	sf::VertexArray hourGlassSand(sf::Quads);
 	hourGlassSand.append(sf::Vertex(sf::Vector2f(static_cast<float>(m_dimensions.x), m_dimensions.y * (emptyPercentage / 2.f)), m_sandColor)); // upper right
 	hourGlassSand.append(sf::Vertex(sf::Vector2f(0, m_dimensions.y * (emptyPercentage / 2.f)),	m_sandColor)); // upper left

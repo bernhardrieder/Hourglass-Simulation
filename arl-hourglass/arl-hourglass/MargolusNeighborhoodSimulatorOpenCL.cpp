@@ -44,21 +44,12 @@ void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr
 		pixelptr)); // pointer to input
 
 	handle_clerror(m_queue.enqueueWriteBuffer(
-		m_bufferPixelOffset, // which buffer to write to
-		CL_TRUE, // block until command is complete
-		0, // offset
-		sizeof(unsigned), // size of write 
-		&pixelOffset)); // pointer to input
+		m_bufferPixelOffset, CL_TRUE, 0, sizeof(unsigned), &pixelOffset));
 
 	for(int i = 0; i < 100; ++i)
 		m_randomNumbers[i] = randomNumber(-100, 100);
 
-	handle_clerror(m_queue.enqueueWriteBuffer(
-		m_bufferRandomNumbers, // which buffer to write to
-		CL_TRUE, // block until command is complete
-		0, // offset
-		sizeof(int)* 100, // size of write 
-		m_randomNumbers)); // pointer to input
+	handle_clerror(m_queue.enqueueWriteBuffer(m_bufferRandomNumbers, CL_TRUE, 0, sizeof(int)* 100, m_randomNumbers));
 
 	cl::Event event;
 	handle_clerror(m_queue.enqueueNDRangeKernel(m_kernelSimpleGeneration, cl::NullRange, m_globalRange, m_localRange, NULL, &event));
