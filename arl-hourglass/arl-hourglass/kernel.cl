@@ -59,7 +59,6 @@ __kernel void simple_iteration(
 			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
 				particleBits |= hasPixelDesiredColor(pixelptr + pixelPositions[bitIndex], particleColor) ? 1 << bitIndex : 0;
 
-
 			/******************* GET MARGULOS NEIGHBORHOOD *******************/
 			if (!*(changesAvailableLUT + particleBits))
 				continue;
@@ -84,7 +83,7 @@ __kernel void simple_iteration(
 			/******************* APPLY NEW COLORS/ MARGOLUS RULES *******************/
 			for (char bitIndex = 0; bitIndex < 4; ++bitIndex)
 			{
-				//if current bit isn't wall then go on
+				//if current bit isn't a wall then go on
 				if (!isBitSet(&obstacleBits, &bitIndex))
 					applyColorToPixel(pixelptr + pixelPositions[bitIndex], isBitSet(&ruleBits, &bitIndex) ? particleColor : idleColor);
 			}
