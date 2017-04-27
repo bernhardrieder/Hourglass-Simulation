@@ -17,9 +17,9 @@ private:
 		GPU_Usage
 	};
 
-	static AppInputResult handleCmdLine(int argc, char* argv[]);
+	static AppInputResult parseCmdLine(int argc, char* argv[]);
 	static void showUsage(const char* name);
 
-	void colorizePixelAtPosition(sf::Image& inOutImage, const sf::Vector2i& position, const float& radius, const sf::Color& newColor, const sf::Color& restrictedColor) const;
+	void colorizePixelAtPosition(sf::Image& inOutImage, const sf::Vector2i& position, const float& radius, const sf::Color& newColor, const sf::Color& restrictedColor, const sf::Vector2u& windowDimensions) const;
 };
 
