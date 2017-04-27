@@ -63,6 +63,7 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 
 	/********************************************** RENDER ***********************************************/
 	sf::Clock clock;
+	bool teleportBrushApplied = true;
 	while (window.isOpen())
 	{
 		sandTeleportBrush.setOrigin(sandTeleportBrushRadius, sandTeleportBrushRadius);
@@ -115,12 +116,13 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
 			colorizePixelAtPosition(img, sf::Mouse::getPosition(window), sandTeleportBrush.getRadius(), color, wallColor, windowDimensions);
 			windowSizedTextureWithHourglass.loadFromImage(img);
+			teleportBrushApplied = true;
 		}
 
 		if (true)
 		{
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
-			margolusSimulator.ApplyMargolusRules(img);
+			margolusSimulator.ApplyMargolusRules(img, teleportBrushApplied);
 			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
 
@@ -129,8 +131,9 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		window.draw(sandTeleportBrush);
 		window.display();
 
-		//sf::Time elapsed = clock.restart();
-		//std::cout << "one frame took: " << elapsed.asMilliseconds() << " ms!\n";
+		sf::Time elapsed = clock.restart();
+		std::cout << "one frame took: " << elapsed.asMilliseconds() << " ms!\n";
+		teleportBrushApplied = false;
 	}
 
 	return 0;

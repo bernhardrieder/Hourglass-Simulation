@@ -13,7 +13,7 @@ public:
 	MargolusNeighborhoodSimulator& operator=(MargolusNeighborhoodSimulator&& other) = delete; // move assignment
 	~MargolusNeighborhoodSimulator();
 
-	void ApplyMargolusRules(sf::Image& inOutImage);
+	void ApplyMargolusRules(sf::Image& inOutImage, const bool& wasTeleportBrushApplied);
 	void ActivateOpenMP();
 	void ActivateOpenCL(const sf::Vector2u& windowSize, const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor);
 
@@ -32,6 +32,7 @@ private:
 	sf::Color m_idleColor;
 	unsigned m_pixelOffset = 1;
 	MargolusNeighborhoodSimulatorOpenCL* m_ocl = nullptr;
+	bool m_oclRefreshImageBuffer;
 
 	std::function<void(sf::Uint8* pixelptr, const sf::Vector2u& imgSize)> m_concreteApplyRulesFunction;
 };
