@@ -21,7 +21,6 @@ private:
 	cl::Context m_context;
 	cl::Kernel m_kernelSimpleGeneration;
 	cl::CommandQueue m_queue;
-	cl::Buffer m_bufferTempData;
 	cl::Buffer m_bufferData;
 	cl::Buffer m_bufferDimensionX;
 	cl::Buffer m_bufferDimensionY;

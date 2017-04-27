@@ -1,4 +1,4 @@
-bool hasPixelDesiredColor(constant uchar* inputPixel, constant uchar* desiredColor)
+bool hasPixelDesiredColor(global uchar* inputPixel, constant uchar* desiredColor)
 {
 	return	*(inputPixel + 0) == *(desiredColor + 0) && 
 			*(inputPixel + 1) == *(desiredColor + 1) && 
@@ -20,11 +20,10 @@ bool isBitSet(char* bits, char* desiredBit)
 }
 
 __kernel void simple_iteration(
-	__constant uchar* pixelptr,
+	__global uchar* pixelptr,
 	__constant int* pixelOffset,
 	__constant int* xDimension,
 	__constant int* yDimension,
-	__global uchar* tempData,
 	__constant uchar* particleColor,
 	__constant uchar* obstacleColor,
 	__constant uchar* idleColor,
@@ -87,7 +86,7 @@ __kernel void simple_iteration(
 			{
 				//if current bit isn't wall then go on
 				if (!isBitSet(&obstacleBits, &bitIndex))
-					applyColorToPixel(tempData + pixelPositions[bitIndex], isBitSet(&ruleBits, &bitIndex) ? particleColor : idleColor);
+					applyColorToPixel(pixelptr + pixelPositions[bitIndex], isBitSet(&ruleBits, &bitIndex) ? particleColor : idleColor);
 			}
 		}
 	}

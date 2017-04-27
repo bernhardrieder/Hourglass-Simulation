@@ -61,15 +61,10 @@ void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr
 		m_randomNumbers)); // pointer to input
 
 	cl::Event event;
-	handle_clerror(m_queue.enqueueCopyBuffer(m_bufferData, m_bufferTempData, 0, 0, m_sizeOfImage, NULL, &event));
-	event.wait();
-
 	handle_clerror(m_queue.enqueueNDRangeKernel(m_kernelSimpleGeneration, cl::NullRange, m_globalRange, m_localRange, NULL, &event));
 	event.wait();
-	handle_clerror(m_queue.enqueueCopyBuffer(m_bufferTempData, m_bufferData, 0, 0, m_sizeOfImage, NULL, &event)); //TODO: do i need this?
-	event.wait();
 
-	handle_clerror(m_queue.enqueueReadBuffer(m_bufferTempData, CL_TRUE, 0, m_sizeOfImage, pixelptr, NULL, &event));	//TODO: added event -> OK?
+	handle_clerror(m_queue.enqueueReadBuffer(m_bufferData, CL_TRUE, 0, m_sizeOfImage, pixelptr, NULL, &event));
 	event.wait();
 }
 
@@ -78,8 +73,7 @@ void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSi
 	m_globalRange = cl::NDRange(imgSize.x/2);
 	m_localRange = cl::NDRange(static_cast<int>(imgSize.x / m_deviceMaxWorkGroupSize + 1));
 
-	m_bufferData = cl::Buffer(m_context, CL_MEM_READ_ONLY, m_sizeOfImage * sizeof(unsigned char));
-	m_bufferTempData = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, m_sizeOfImage * sizeof(unsigned char));
+	m_bufferData = cl::Buffer(m_context, CL_MEM_READ_WRITE, m_sizeOfImage * sizeof(unsigned char));
 	m_bufferDimensionX = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int));
 	m_bufferDimensionY = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int));
 	m_bufferPixelOffset = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(unsigned int));
@@ -103,14 +97,12 @@ void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSi
 	handle_clerror(m_kernelSimpleGeneration.setArg(1, m_bufferPixelOffset));
 	handle_clerror(m_kernelSimpleGeneration.setArg(2, m_bufferDimensionX));
 	handle_clerror(m_kernelSimpleGeneration.setArg(3, m_bufferDimensionY));
-	handle_clerror(m_kernelSimpleGeneration.setArg(4, m_bufferTempData));
-	handle_clerror(m_kernelSimpleGeneration.setArg(5, m_bufferParticleColor));
-	handle_clerror(m_kernelSimpleGeneration.setArg(6, m_bufferObstacleColor));
-	handle_clerror(m_kernelSimpleGeneration.setArg(7, m_bufferIdleColor));
-	handle_clerror(m_kernelSimpleGeneration.setArg(8, m_bufferRulesLUT));
-	handle_clerror(m_kernelSimpleGeneration.setArg(9, m_bufferChangesAvailableLUT));
-	handle_clerror(m_kernelSimpleGeneration.setArg(10, m_bufferRandomNumbers));
-
+	handle_clerror(m_kernelSimpleGeneration.setArg(4, m_bufferParticleColor));
+	handle_clerror(m_kernelSimpleGeneration.setArg(5, m_bufferObstacleColor));
+	handle_clerror(m_kernelSimpleGeneration.setArg(6, m_bufferIdleColor));
+	handle_clerror(m_kernelSimpleGeneration.setArg(7, m_bufferRulesLUT));
+	handle_clerror(m_kernelSimpleGeneration.setArg(8, m_bufferChangesAvailableLUT));
+	handle_clerror(m_kernelSimpleGeneration.setArg(9, m_bufferRandomNumbers));
 }
 
 std::vector<cl::Platform> MargolusNeighborhoodSimulatorOpenCL::getPlatforms() const
