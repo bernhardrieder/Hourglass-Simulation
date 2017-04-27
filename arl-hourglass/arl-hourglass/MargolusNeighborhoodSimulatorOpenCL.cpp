@@ -63,7 +63,7 @@ void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr
 void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSize, const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor)
 {
 	m_globalRange = cl::NDRange(imgSize.x/2);
-	m_localRange = cl::NDRange(static_cast<int>(imgSize.x / m_deviceMaxWorkGroupSize + 1));
+	m_localRange = cl::NDRange(imgSize.x / m_deviceMaxWorkGroupSize + 1);
 
 	m_bufferData = cl::Buffer(m_context, CL_MEM_READ_WRITE, m_sizeOfImage * sizeof(unsigned char));
 	m_bufferDimensionX = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int));

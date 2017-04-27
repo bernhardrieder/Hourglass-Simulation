@@ -47,6 +47,7 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 
 	//create window sized texture with hourglass in it
 	sf::Texture windowSizedTextureWithHourglass;
+	sf::Sprite windowSizedSpriteWithHourglass;
 	sf::RenderTexture rtWithHourglassInside;
 	{
 		if (!rtWithHourglassInside.create(windowDimensions.x, windowDimensions.y))
@@ -59,6 +60,7 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		rtWithHourglassInside.draw(hourglass.GetSpriteCenteredTo(sf::Vector2u(windowDimensions.x / 2, windowDimensions.y / 2)));
 		rtWithHourglassInside.display();
 		windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
+		windowSizedSpriteWithHourglass.setTexture(windowSizedTextureWithHourglass, true);
 	}
 
 	/********************************************** RENDER ***********************************************/
@@ -103,7 +105,8 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 					rtWithHourglassInside.draw(sprite);
 					rtWithHourglassInside.display();
 
-					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage());
+					windowSizedTextureWithHourglass.loadFromImage(rtWithHourglassInside.getTexture().copyToImage()); 
+					teleportBrushApplied = true;
 				}
 			}
 		}
@@ -123,16 +126,21 @@ int HourglassSimulation::Execute(int argc, char* argv[]) const
 		{
 			sf::Image img = windowSizedTextureWithHourglass.copyToImage();
 			margolusSimulator.ApplyMargolusRules(img, teleportBrushApplied);
+			//margolusSimulator.ApplyMargolusRules(img, false);
+			//margolusSimulator.ApplyMargolusRules(img, false);
+			//margolusSimulator.ApplyMargolusRules(img, false);
+			//margolusSimulator.ApplyMargolusRules(img, false);
 			windowSizedTextureWithHourglass.loadFromImage(img);
 		}
+		windowSizedSpriteWithHourglass.setTexture(windowSizedTextureWithHourglass);
 
 		window.clear(wallColor);
-		window.draw(sf::Sprite(windowSizedTextureWithHourglass));
+		window.draw(windowSizedSpriteWithHourglass);
 		window.draw(sandTeleportBrush);
 		window.display();
 
-		sf::Time elapsed = clock.restart();
-		std::cout << "one frame took: " << elapsed.asMilliseconds() << " ms!\n";
+		//sf::Time elapsed = clock.restart();
+		//std::cout << "one frame took: " << elapsed.asMilliseconds() << " ms!\n";
 		teleportBrushApplied = false;
 	}
 
