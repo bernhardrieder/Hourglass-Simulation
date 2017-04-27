@@ -2,9 +2,15 @@
 #include <iostream>
 #include <fstream>
 
+inline int randomNumber(int low, int high)
+{
+	return low + rand() / (RAND_MAX / (high - low));
+}
 
 MargolusNeighborhoodSimulatorOpenCL::MargolusNeighborhoodSimulatorOpenCL(bool useGpu, int platformId, int deviceId)
 {
+	srand(static_cast<unsigned int>(time(nullptr)));
+
 	getDevice(useGpu, platformId, deviceId);
 	createContext(m_device);
 	createProgram(m_context, m_sourceCodeFile);
@@ -44,6 +50,16 @@ void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr
 		sizeof(unsigned), // size of write 
 		&pixelOffset)); // pointer to input
 
+	m_randomNumbers[0] = randomNumber(-100, 100);
+	m_randomNumbers[1] = randomNumber(-100, 100);
+
+	handle_clerror(m_queue.enqueueWriteBuffer(
+		m_bufferRandomNumbers, // which buffer to write to
+		CL_TRUE, // block until command is complete
+		0, // offset
+		sizeof(int)*2, // size of write 
+		m_randomNumbers)); // pointer to input
+
 	cl::Event event;
 	handle_clerror(m_queue.enqueueCopyBuffer(m_bufferData, m_bufferTempData, 0, 0, m_sizeOfImage, NULL, &event));
 	event.wait();
@@ -72,6 +88,7 @@ void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSi
 	m_bufferIdleColor = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(unsigned char) * 4);
 	m_bufferRulesLUT = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(char) * 16);
 	m_bufferChangesAvailableLUT = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(bool) * 16);
+	m_bufferRandomNumbers = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int) * 2);
 
 	handle_clerror(m_queue.enqueueWriteBuffer(m_bufferDimensionX, CL_TRUE, 0, sizeof(int), &m_dataSize.x));
 	handle_clerror(m_queue.enqueueWriteBuffer(m_bufferDimensionY, CL_TRUE, 0, sizeof(int), &m_dataSize.y));
@@ -92,6 +109,7 @@ void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSi
 	handle_clerror(m_kernelSimpleGeneration.setArg(7, m_bufferIdleColor));
 	handle_clerror(m_kernelSimpleGeneration.setArg(8, m_bufferRulesLUT));
 	handle_clerror(m_kernelSimpleGeneration.setArg(9, m_bufferChangesAvailableLUT));
+	handle_clerror(m_kernelSimpleGeneration.setArg(10, m_bufferRandomNumbers));
 
 }
 
@@ -111,7 +129,7 @@ void MargolusNeighborhoodSimulatorOpenCL::getDevice(bool useGpu, int platformId,
 	else
 		handle_clerror(CL_INVALID_DEVICE);
 
-	debugDeviceOutput(m_device);
+	//debugDeviceOutput(m_device);
 	m_deviceMaxWorkGroupSize = m_device.getInfo <CL_DEVICE_MAX_WORK_GROUP_SIZE>();
 }
 

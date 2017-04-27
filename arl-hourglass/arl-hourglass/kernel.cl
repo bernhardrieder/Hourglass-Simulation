@@ -19,11 +19,6 @@ bool isBitSet(char* bits, char* desiredBit)
 	return *bits & (1 << *desiredBit);
 }
 
-void printColor(constant char* name, constant uchar* color)
-{
-	printf("%s = {%d, %u, %u, %u} \n", name,  *(color+0), *(color+1), *(color+2), *(color+3));
-}
-
 __kernel void simple_iteration(
 	__constant uchar* pixelptr,
 	__constant int* pixelOffset,
@@ -34,64 +29,11 @@ __kernel void simple_iteration(
 	__constant uchar* obstacleColor,
 	__constant uchar* idleColor,
 	__constant char* rulesLUT,
-	__constant bool* changesAvailableLUT
+	__constant bool* changesAvailableLUT,
+	__constant int* random
 )
 {
-	//printf("pixelOffset = %i\n", *pixelOffset);
-	//printf("xDimension = %i\n", *xDimension);
-	//printf("yDimension = %i\n", *yDimension);
-	//printTest("dasdasdasda", *(particleColor+2));
-	//int id = get_global_id(0); 
-	//if (id >= 499)
-	//{
-	//	//printColor("particleColor", particleColor);
-	//	//printColor("obstacleColor", obstacleColor);
-	//	//printColor("idleColor", idleColor);
-	//	for (int i = 0; i < 16; ++i)
-	//		printf("%u ", *(rulesLUT + i));
-	//	printf("\n");
-	//	for (int i = 0; i < 16; ++i)
-	//		printf("%s ", *(changesAvailableLUT + i) ? "true" : "false" );
-	//	printf("\n");
-	//}
-	//char test[4];
-	//test[0] = '0';
-	//test[1] = '1';
-	//test[2] = '2';
-	//test[3] = '3';
-
-	//uchar testPixel[4];
-	//testPixel[0] = 123;
-	//testPixel[1] = 123;
-	//testPixel[2] = 123;
-	//testPixel[3] = 123;
-
-	//uchar testPixel2[4];
-	//testPixel2[0] = 123;
-	//testPixel2[1] = 123;
-	//testPixel2[2] = 123;
-	//testPixel2[3] = 123;
-
-	//uchar testPixel3[4];
-	//testPixel3[0] = 123;
-	//testPixel3[1] = 124;
-	//testPixel3[2] = 123;
-	//testPixel3[3] = 123;
-
-	//printf("%s\n", hasPixelDesiredColor(testPixel, testPixel2) ? "true" : "false");
-	//applyColorToPixel(testPixel3, testPixel);
-	//printf("%s\n", hasPixelDesiredColor(testPixel, testPixel3) ? "true" : "false");
-
-	//char abc = 2;
-	//char bit = 1;
-	//printf("%s\n", isBitSet(&abc,&bit) ? "true" : "false");
-
-	//for (int i = 0; i < 4; ++i)
-	//	printf("%s", test+i);
-
-	int id = get_global_id(0); // 0 .... 1000 -> image size
-
-	//printf("%i\n", id);
+	int id = get_global_id(0); 
 
 	int x = (id * 2) + *pixelOffset;
 	if (x < *xDimension - *pixelOffset)
@@ -125,10 +67,7 @@ __kernel void simple_iteration(
 
 			char ruleBits = *(rulesLUT + particleBits);
 			if (particleBits == 3)
-			{
-				//determine random if it remains 3 or will be 12
-				ruleBits = 12;
-			}
+				ruleBits = *(random + *pixelOffset) < 0 ? 12 : 3;
 
 			/******************* CHECK FOR OBSTACLES AND WRITE BITS *******************/
 			char obstacleBits = 0;

@@ -1,9 +1,16 @@
 #include "MargolusNeighborhoodSimulator.h"
 #include <omp.h>
 
+
+inline int randomNumber(int low, int high)
+{
+	return low + rand() / (RAND_MAX / (high - low));
+}
+
 MargolusNeighborhoodSimulator::MargolusNeighborhoodSimulator(const char ruleLUT[16], const bool changesAvailableLUT[16], const sf::Color& particleColor, const sf::Color& obstacleColor, const sf::Color& idleColor)
 	: m_rulesLUT{ruleLUT}, m_changesAvailableLUT(changesAvailableLUT), m_particleColor(particleColor), m_obstacleColor(obstacleColor), m_idleColor(idleColor)
 {
+	srand(static_cast<unsigned int>(time(nullptr)));
 }
 
 MargolusNeighborhoodSimulator::~MargolusNeighborhoodSimulator()
@@ -87,10 +94,7 @@ void MargolusNeighborhoodSimulator::applyRulesOpenMP(sf::Uint8* pixelptr, const 
 
 			ruleBits = m_rulesLUT[particleBits];
 			if (particleBits == 3)
-			{
-				//determine random if it remains 3 or will be 12
-				ruleBits = 12;
-			}
+				ruleBits = randomNumber(-100, 100) < 0 ? 12 : 3;
 
 			/******************* CHECK FOR OBSTACLES AND WRITE BITS *******************/
 			obstacleBits = 0;
