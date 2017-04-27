@@ -66,7 +66,7 @@ __kernel void simple_iteration(
 
 			char ruleBits = *(rulesLUT + particleBits);
 			if (particleBits == 3)
-				ruleBits = *(random + *pixelOffset) < 0 ? 12 : 3;
+				ruleBits = *(random + (y * (*xDimension) + x)/10000) < 0 ? 12 : 3;
 
 			/******************* CHECK FOR OBSTACLES AND WRITE BITS *******************/
 			char obstacleBits = 0;

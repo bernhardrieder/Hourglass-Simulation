@@ -50,14 +50,14 @@ void MargolusNeighborhoodSimulatorOpenCL::ApplyMargolusRules(sf::Uint8* pixelptr
 		sizeof(unsigned), // size of write 
 		&pixelOffset)); // pointer to input
 
-	m_randomNumbers[0] = randomNumber(-100, 100);
-	m_randomNumbers[1] = randomNumber(-100, 100);
+	for(int i = 0; i < 100; ++i)
+		m_randomNumbers[i] = randomNumber(-100, 100);
 
 	handle_clerror(m_queue.enqueueWriteBuffer(
 		m_bufferRandomNumbers, // which buffer to write to
 		CL_TRUE, // block until command is complete
 		0, // offset
-		sizeof(int)*2, // size of write 
+		sizeof(int)* 100, // size of write 
 		m_randomNumbers)); // pointer to input
 
 	cl::Event event;
@@ -82,7 +82,7 @@ void MargolusNeighborhoodSimulatorOpenCL::createKernel(const sf::Vector2u& imgSi
 	m_bufferIdleColor = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(unsigned char) * 4);
 	m_bufferRulesLUT = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(char) * 16);
 	m_bufferChangesAvailableLUT = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(bool) * 16);
-	m_bufferRandomNumbers = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int) * 2);
+	m_bufferRandomNumbers = cl::Buffer(m_context, CL_MEM_READ_ONLY, sizeof(int) * 100);
 
 	handle_clerror(m_queue.enqueueWriteBuffer(m_bufferDimensionX, CL_TRUE, 0, sizeof(int), &m_dataSize.x));
 	handle_clerror(m_queue.enqueueWriteBuffer(m_bufferDimensionY, CL_TRUE, 0, sizeof(int), &m_dataSize.y));
